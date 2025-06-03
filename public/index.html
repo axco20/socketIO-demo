@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Real-Time Chat + Canvas Tadpoles + Toastify</title>
+  <title>Socket-IO + D3.js Demo</title>
 
   <link
     rel="stylesheet"
@@ -11,112 +11,440 @@
   />
 
   <style>
-    body {
+
+    html {
+      height: 100%;
       margin: 0;
       padding: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
-      color: #333;
+      background: radial-gradient(
+        ellipse at bottom,
+        #1B2735 0%,
+        #090A0F 100%
+      );
+      overflow: hidden;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #f0f4f8;
+    }
+
+    #stars,
+    #stars::after {
+      width: 1px;
+      height: 1px;
+      background: transparent;
+      box-shadow:
+        323px 321px #FFF,
+        303px 121px #FFF,
+        1126px 1846px #FFF,
+        1183px 306px #FFF,
+        868px 1746px #FFF,
+        351px 555px #FFF,
+        826px 235px #FFF,
+        1325px 1519px #FFF,
+        1036px 759px #FFF,
+        504px 1522px #FFF,
+        702px 1581px #FFF,
+        397px 164px #FFF,
+        1400px 402px #FFF,
+        1296px 568px #FFF,
+        342px 71px #FFF,
+        1834px 53px #FFF,
+        1251px 1126px #FFF,
+        1745px 776px #FFF,
+        452px 1678px #FFF,
+        792px 371px #FFF,
+        1531px 318px #FFF,
+        228px 1242px #FFF,
+        169px 698px #FFF,
+        611px 1649px #FFF,
+        1947px 179px #FFF,
+        1642px 1165px #FFF,
+        1910px 504px #FFF,
+        1362px 1179px #FFF,
+        888px 1423px #FFF,
+        435px 1420px #FFF,
+        1807px 849px #FFF,
+        1723px 702px #FFF,
+        869px 269px #FFF,
+        1162px 1414px #FFF,
+        532px 328px #FFF,
+        1680px 544px #FFF,
+        404px 1361px #FFF,
+        69px 917px #FFF,
+        1549px 432px #FFF,
+        24px 76px #FFF,
+        286px 1913px #FFF,
+        639px 1070px #FFF,
+        1246px 867px #FFF,
+        1539px 1724px #FFF,
+        1662px 1155px #FFF,
+        1222px 1198px #FFF,
+        518px 1915px #FFF,
+        1308px 936px #FFF,
+        1310px 1469px #FFF,
+        250px 1798px #FFF,
+        100px 92px #FFF,
+        992px 1917px #FFF,
+        150px 1801px #FFF,
+        728px 418px #FFF,
+        1288px 666px #FFF,
+        1203px 280px #FFF,
+        171px 1057px #FFF,
+        197px 1896px #FFF,
+        1649px 1037px #FFF,
+        922px 377px #FFF,
+        1010px 1413px #FFF,
+        1447px 1016px #FFF,
+        1324px 580px #FFF,
+        761px 661px #FFF,
+        1527px 320px #FFF,
+        814px 1661px #FFF,
+        1018px 1095px #FFF,
+        69px 438px #FFF,
+        751px 1211px #FFF,
+        919px 446px #FFF,
+        1516px 1330px #FFF,
+        1897px 1452px #FFF,
+        1271px 658px #FFF,
+        1677px 1349px #FFF;
+      animation: animStar 50s linear infinite;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #stars::after {
+      content: "";
+      position: absolute;
+      top: 2000px;
+      width: 1px;
+      height: 1px;
+      background: transparent;
+      box-shadow:
+        323px 321px #FFF,
+        303px 121px #FFF,
+        1126px 1846px #FFF,
+        1183px 306px #FFF,
+        868px 1746px #FFF,
+        351px 555px #FFF,
+        826px 235px #FFF,
+        1325px 1519px #FFF,
+        1036px 759px #FFF,
+        504px 1522px #FFF,
+        702px 1581px #FFF,
+        397px 164px #FFF,
+        1400px 402px #FFF,
+        1296px 568px #FFF,
+        342px 71px #FFF,
+        1834px 53px #FFF,
+        1251px 1126px #FFF,
+        1745px 776px #FFF,
+        452px 1678px #FFF,
+        792px 371px #FFF,
+        1531px 318px #FFF,
+        228px 1242px #FFF,
+        169px 698px #FFF,
+        611px 1649px #FFF,
+        1947px 179px #FFF,
+        1642px 1165px #FFF,
+        1910px 504px #FFF,
+        1362px 1179px #FFF,
+        888px 1423px #FFF,
+        435px 1420px #FFF,
+        1807px 849px #FFF,
+        1723px 702px #FFF,
+        869px 269px #FFF,
+        1162px 1414px #FFF,
+        532px 328px #FFF,
+        1680px 544px #FFF,
+        404px 1361px #FFF,
+        69px 917px #FFF,
+        1549px 432px #FFF,
+        24px 76px #FFF,
+        286px 1913px #FFF,
+        639px 1070px #FFF,
+        1246px 867px #FFF,
+        1539px 1724px #FFF,
+        1662px 1155px #FFF,
+        1222px 1198px #FFF,
+        518px 1915px #FFF,
+        1308px 936px #FFF,
+        1310px 1469px #FFF,
+        250px 1798px #FFF,
+        100px 92px #FFF,
+        992px 1917px #FFF,
+        150px 1801px #FFF,
+        728px 418px #FFF,
+        1288px 666px #FFF,
+        1203px 280px #FFF,
+        171px 1057px #FFF,
+        197px 1896px #FFF,
+        1649px 1037px #FFF,
+        922px 377px #FFF,
+        1010px 1413px #FFF,
+        1447px 1016px #FFF,
+        1324px 580px #FFF,
+        761px 661px #FFF,
+        1527px 320px #FFF,
+        814px 1661px #FFF,
+        1018px 1095px #FFF,
+        69px 438px #FFF,
+        751px 1211px #FFF,
+        919px 446px #FFF,
+        1516px 1330px #FFF,
+        1897px 1452px #FFF,
+        1271px 658px #FFF,
+        1677px 1349px #FFF;
+    }
+
+    #stars2,
+    #stars2::after {
+      width: 2px;
+      height: 2px;
+      background: transparent;
+      box-shadow:
+        1661px 339px #FFF,
+        1130px 836px #FFF,
+        1431px 320px #FFF,
+        1453px 1912px #FFF,
+        1636px 1987px #FFF,
+        1113px 1642px #FFF,
+        1330px 316px #FFF,
+        192px 1250px #FFF,
+        741px 1898px #FFF,
+        370px 912px #FFF,
+        1226px 1865px #FFF,
+        1761px 599px #FFF,
+        321px 1036px #FFF,
+        985px 295px #FFF,
+        50px 1788px #FFF,
+        1548px 1502px #FFF,
+        1075px 448px #FFF,
+        305px 659px #FFF,
+        47px 300px #FFF,
+        1854px 1234px #FFF;
+      animation: animStar 100s linear infinite;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #stars2::after {
+      content: "";
+      position: absolute;
+      top: 2000px;
+      width: 2px;
+      height: 2px;
+      background: transparent;
+      box-shadow:
+        1661px 339px #FFF,
+        1130px 836px #FFF,
+        1431px 320px #FFF,
+        1453px 1912px #FFF,
+        1636px 1987px #FFF,
+        1113px 1642px #FFF,
+        1330px 316px #FFF,
+        192px 1250px #FFF,
+        741px 1898px #FFF,
+        370px 912px #FFF,
+        1226px 1865px #FFF,
+        1761px 599px #FFF,
+        321px 1036px #FFF,
+        985px 295px #FFF,
+        50px 1788px #FFF,
+        1548px 1502px #FFF,
+        1075px 448px #FFF,
+        305px 659px #FFF,
+        47px 300px #FFF,
+        1854px 1234px #FFF;
+    }
+
+    #stars3,
+    #stars3::after {
+      width: 3px;
+      height: 3px;
+      background: transparent;
+      box-shadow:
+        1278px 24px #FFF,
+        1339px 1660px #FFF,
+        1057px 922px #FFF,
+        200px 1880px #FFF,
+        70px 1487px #FFF,
+        1454px 1119px #FFF,
+        967px 700px #FFF,
+        1205px 1202px #FFF,
+        329px 513px #FFF,
+        578px 1770px #FFF;
+      animation: animStar 150s linear infinite;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #stars3::after {
+      content: "";
+      position: absolute;
+      top: 2000px;
+      width: 3px;
+      height: 3px;
+      background: transparent;
+      box-shadow:
+        1278px 24px #FFF,
+        1339px 1660px #FFF,
+        1057px 922px #FFF,
+        200px 1880px #FFF,
+        70px 1487px #FFF,
+        1454px 1119px #FFF,
+        967px 700px #FFF,
+        1205px 1202px #FFF,
+        329px 513px #FFF,
+        578px 1770px #FFF;
+    }
+
+    @keyframes animStar {
+      from {
+        transform: translateY(0px);
+      }
+      to {
+        transform: translateY(-2000px);
+      }
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #f0f4f8;
     }
 
     .container {
       max-width: 600px;
       width: 100%;
       margin-top: 40px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      z-index: 1; 
     }
 
     h2 {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       text-align: center;
-      color: #2c3e50;
+      color: #34495e;
+      font-weight: 600;
     }
 
     #messages {
       list-style: none;
-      padding: 10px;
+      padding: 15px;
       margin: 0;
       height: 300px;
       overflow-y: auto;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      background-color: #fefefe;
+      border: 2px solid #d1c4e9;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
     #messages li {
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      background-color: #e8f0fe;
-      border-radius: 4px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
       word-wrap: break-word;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    }
-    #messages li:nth-child(odd) {
-      background-color: #d0e2ff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      color: #2c3e50;
+      font-size: 15px;
     }
 
     form {
-      margin-top: 12px;
+      margin-top: 15px;
       display: flex;
       width: 100%;
-      gap: 8px;
+      gap: 10px;
     }
+
     #msgInput {
       flex: 1;
-      padding: 10px 12px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 12px 16px;
+      border: 2px solid #b39ddb;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+
     #msgInput:focus {
       outline: none;
-      border-color: #3366ff;
-      box-shadow: 0 0 3px rgba(51, 102, 255, 0.3);
+      border-color: #5e35b1;
+      box-shadow: 0 0 6px rgba(94, 53, 177, 0.3);
+      background-color: #ffffff;
     }
+
     button {
-      padding: 10px 16px;
-      background-color: #3366ff;
-      color: #fff;
+      padding: 12px 20px;
+      background-color: #7e57c2;
+      color: #ffffff;
       border: none;
-      border-radius: 4px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 15px;
       cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
     }
+
     button:hover {
-      background-color: #254eda;
+      background-color: #5e35b1;
+      transform: translateY(-2px);
     }
 
     .toastify {
-      font-size: 14px;
-      border-radius: 4px;
+      font-size: 20px;
+      border-radius: 8px;
+      padding: 20px 30px;
+      min-width: 350px;
+      max-width: 400px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
     .tadpoles-header {
       margin-top: 40px;
       text-align: center;
-      font-weight: bold;
-      color: #2c3e50;
+      font-weight: 600;
+      color: #34495e;
       font-size: 18px;
     }
 
     #tadpoleContainer {
       margin-top: 12px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      background-color: #f5f5f5;
+      border: 2px solid #d1c4e9;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
       position: relative;
+      overflow: hidden;
+      padding: 10px 0;
     }
 
     #tadpoleCanvas {
       display: block;
+      margin: 0 auto;
+      border-radius: 8px;
+      background: #ffffff;
     }
   </style>
 </head>
 
 <body>
+  <div id="stars"></div>
+  <div id="stars2"></div>
+  <div id="stars3"></div>
+
   <div class="container">
     <h2>Socket-IO + D3.js Interview Demo</h2>
     <ul id="messages"></ul>

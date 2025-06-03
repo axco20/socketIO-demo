@@ -17,7 +17,7 @@ let userCount = 0;
 
 io.on("connection", (socket) => {
   userCount++;
-  socket.broadcast.emit("user connected");  
+  socket.broadcast.emit("user connected");
   io.emit("user count", userCount);
 
   socket.on("chat message", (msg) => {
@@ -26,7 +26,6 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     userCount = Math.max(0, userCount - 1);
-
     socket.broadcast.emit("user disconnected");
     io.emit("user count", userCount);
   });
