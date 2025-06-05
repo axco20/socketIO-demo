@@ -72,101 +72,105 @@ socket.on("user disconnected", () => {
 });
 
 let currentUserCount = 0;
-const tadpoleHeader = document.getElementById("tadpoleHeader");
+const svg = d3.select("#tadpoleSvg");
+const SVG_WIDTH = +svg.attr("width");
+const SVG_HEIGHT = +svg.attr("height");
 
-socket.on("user count", (count) => {
-  currentUserCount = count;
-  tadpoleHeader.textContent = `${count} connected user${count === 1 ? "" : "s"} in the chat room`;
-  TadpoleAnimator.setTadpoleCount(count);
+const NUM_PATH_POINTS = 10;
+const MAX_SPEED = 1.0;
+const MIN_SPEED = 0.3;
+const BODY_RADIUS = 6;
+const TAIL_LENGTH = 30;
+const TAIL_WIDTH = 2;
+
+function rnd(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function createTadpoles(n) {
+  const tadpoles = [];
+  for (let i = 0; i < n; i++) {
+    const x0 = rnd(BODY_RADIUS + TAIL_LENGTH, SVG_WIDTH - (BODY_RADIUS + TAIL_LENGTH));
+    const y0 = rnd(BODY_RADIUS, SVG_HEIGHT - BODY_RADIUS);
+    const angle = rnd(0, 2 * Math.PI);
+    const speed = rnd(MIN_SPEED, MAX_SPEED);
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed;
+
+    const path = Array(NUM_PATH_POINTS).fill().map(() => ({ x: x0, y: y0 }));
+
+    tadpoles.push({ x: x0, y: y0, vx, vy, path });
+  }
+  return tadpoles;
+}
+
+const tailLine = d3.line()
+  .x(d => d.x)
+  .y(d => d.y)
+  .curve(d3.curveBasis); 
+
+let tadpoles = [];
+let tadpoleG = svg.selectAll("g.tadpole"); 
+
+function updateTadpoleElements() {
+  tadpoleG = tadpoleG
+    .data(tadpoles, (d, i) => i); 
+
+  tadpoleG.exit().remove();
+  const gEnter = tadpoleG
+    .enter()
+    .append("g")
+    .attr("class", "tadpole");
+
+  gEnter.append("ellipse")
+    .attr("rx", BODY_RADIUS)
+    .attr("ry", BODY_RADIUS * 0.6)
+    .attr("fill", "#7e57c2");
+  
+  gEnter.append("path")
+    .attr("stroke", "#7e57c2")
+    .attr("stroke-width", TAIL_WIDTH)
+    .attr("fill", "none")
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round");
+
+  tadpoleG = gEnter.merge(tadpoleG);
+}
+
+function animateTadpoles(elapsed) {
+  tadpoles.forEach(t => {
+    t.x += t.vx;
+    t.y += t.vy;
+
+    if (t.x < BODY_RADIUS || t.x > SVG_WIDTH - BODY_RADIUS) t.vx *= -1;
+    if (t.y < BODY_RADIUS || t.y > SVG_HEIGHT - BODY_RADIUS) t.vy *= -1;
+
+    t.path.pop();
+    t.path.unshift({ x: t.x, y: t.y });
+  });
+
+  tadpoleG.each(function(d) {
+    const g = d3.select(this);
+
+    const headAngle = Math.atan2(d.vy, d.vx) * 180 / Math.PI; 
+    g.select("ellipse")
+      .attr("cx", d.x)
+      .attr("cy", d.y)
+      .attr("transform", `rotate(${headAngle}, ${d.x}, ${d.y})`);
+
+    g.select("path")
+      .attr("d", tailLine(d.path));
+  });
+}
+
+const timer = d3.timer((elapsed) => {
+  animateTadpoles(elapsed);
 });
 
-const TadpoleAnimator = (function () {
-  const canvas = document.getElementById("tadpoleCanvas");
-  const ctx = canvas.getContext("2d");
-  let tadpoles = [];
-  let width = canvas.width;
-  let height = canvas.height;
-  let animationId = null;
+socket.on("user count", (count) => {
+  const header = document.getElementById("tadpoleHeader");
+  header.textContent = `${count} connected user${count === 1 ? "" : "s"} in the chat room`;
 
-  const NUM_PATH_POINTS = 10;
-  const MAX_SPEED = 1.0;
-  const MIN_SPEED = 0.3;
-  const BODY_RADIUS = 6;
-  const TAIL_LENGTH = 30;
-  const TAIL_WIDTH = 2;
-
-  function rnd(min, max) {
-    return min + Math.random() * (max - min);
-  }
-
-  function createTadpoles(n) {
-    tadpoles = [];
-    for (let i = 0; i < n; i++) {
-      const x0 = rnd(BODY_RADIUS + TAIL_LENGTH, width - BODY_RADIUS - TAIL_LENGTH);
-      const y0 = rnd(BODY_RADIUS, height - BODY_RADIUS);
-      const angle = rnd(0, 2 * Math.PI);
-      const speed = rnd(MIN_SPEED, MAX_SPEED);
-      const vx = Math.cos(angle) * speed;
-      const vy = Math.sin(angle) * speed;
-
-      const path = Array(NUM_PATH_POINTS).fill().map(() => ({ x: x0, y: y0 }));
-      tadpoles.push({ x: x0, y: y0, vx, vy, path });
-    }
-  }
-
-  function updateTadpoles() {
-    for (const t of tadpoles) {
-      t.x += t.vx;
-      t.y += t.vy;
-
-      if (t.x < BODY_RADIUS || t.x > width - BODY_RADIUS) t.vx *= -1;
-      if (t.y < BODY_RADIUS || t.y > height - BODY_RADIUS) t.vy *= -1;
-
-      t.path.pop();
-      t.path.unshift({ x: t.x, y: t.y });
-    }
-  }
-
-  function drawTadpoles() {
-    ctx.clearRect(0, 0, width, height);
-
-    for (const t of tadpoles) {
-      ctx.save();
-      ctx.translate(t.x, t.y);
-      const headAngle = Math.atan2(t.vy, t.vx);
-      ctx.rotate(headAngle);
-      ctx.beginPath();
-      ctx.ellipse(0, 0, BODY_RADIUS, BODY_RADIUS * 0.6, 0, 0, 2 * Math.PI);
-      ctx.fillStyle = "#7e57c2";
-      ctx.fill();
-      ctx.restore();
-
-      ctx.beginPath();
-      const tailPoints = t.path;
-      ctx.moveTo(tailPoints[0].x, tailPoints[0].y);
-      for (let i = 1; i < tailPoints.length; i++) {
-        const p = tailPoints[i];
-        ctx.lineTo(p.x, p.y);
-      }
-      ctx.strokeStyle = "#7e57c2";
-      ctx.lineWidth = TAIL_WIDTH;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      ctx.stroke();
-    }
-  }
-
-  function animate() {
-    updateTadpoles();
-    drawTadpoles();
-    animationId = requestAnimationFrame(animate);
-  }
-
-  return {
-    setTadpoleCount(n) {
-      cancelAnimationFrame(animationId);
-      createTadpoles(n);
-      animate();
-    }
-  };
-})();
+  tadpoles = createTadpoles(count);
+  updateTadpoleElements();
+});
